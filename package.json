@@ -1,16 +1,15 @@
 {
   "dependencies": {
+    "express": "^4.19.2",
     "fs": "^0.0.1-security",
-    "os": "^0.1.2",
-    "weather-js": "^2.0.0"
+    "os": "^0.1.2"
   },
-  "name": "api",
+  "name": "alps-drive",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "today": "node today.js",
-    "weather": "node weather.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon main.js",
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
@@ -27,5 +26,8 @@
     "url": "https://github.com/Vodianoi/API-JS/issues"
   },
   "homepage": "https://github.com/Vodianoi/API-JS#readme",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
 }
