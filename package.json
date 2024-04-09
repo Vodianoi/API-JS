@@ -2,5 +2,29 @@
   "dependencies": {
     "fs": "^0.0.1-security",
     "os": "^0.1.2"
-  }
+  },
+  "name": "api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "today": "node today.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Vodianoi/API-JS.git"
+  },
+  "keywords": [
+    "api",
+    "js",
+    "node"
+  ],
+  "author": "Atopy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Vodianoi/API-JS/issues"
+  },
+  "homepage": "https://github.com/Vodianoi/API-JS#readme",
+  "description": ""
 }
