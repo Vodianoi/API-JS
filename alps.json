@@ -1,0 +1,93 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Alps Drive",
+    "description": "Drive for Alps",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+        "description": "Local server",
+        "variables": {
+          "env": {
+            "default": "dev",
+            "description": "Environment"
+          }
+        }
+    }
+  ],
+  "paths": {
+    "/": {
+        "get": {
+            "summary": "Get all files",
+            "description": "Get all files",
+            "responses": {
+            "200": {
+                "description": "Successful operation",
+                "content": {
+                "application/json": {
+                    "schema": {
+                    "type": "array",
+                    "items": {
+                    }
+                    }
+                }
+                }
+            }
+            }
+        }
+    },
+    "/api/drive": {
+      "get": {
+        "summary": "Get all files",
+        "description": "Get all files",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Upload file",
+        "description": "Upload file",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+  }
+}
