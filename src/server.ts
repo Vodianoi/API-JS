@@ -1,8 +1,19 @@
 import express from 'express'
 import routes from './routes/routes'
 import expressListRoutes from "express-list-routes";
+import bb from "express-busboy";
+
 
 const app = express();
+
+
+bb.extend(app, {
+    upload: true,
+    path: '/tmp/drive',
+    allowedPath: /./
+});
+
+
 const port = 3000;
 
 function start() {
@@ -22,7 +33,7 @@ function start() {
 
     app.listen(port, () => {
         console.log(`Listening app on port ${port}`);
-        console.log(expressListRoutes(app))
+        expressListRoutes(app)
     })
 }
 

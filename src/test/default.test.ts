@@ -73,7 +73,7 @@ describe('GET /api/drive/{name} ', () => {
     function cleanup() {
         return () => {
             fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
-            fs.unlinkSync(path.join(__driveroot, 'testFile.txt'))
+            fs.rmSync(path.join(__driveroot, 'testFile.txt'))
         };
     }
 
@@ -83,5 +83,43 @@ describe('GET /api/drive/{name} ', () => {
 });
 
 describe('POST /api/drive?name={name}', () => {
+    it('should responds with status 201', async () => {
+        const response = await request(app).post('/api/drive?name=testFolder');
+        expect(response.status).toBe(201);
+    });
 
+    it('should responds with status 400', async () => {
+        const response = await request(app).post('/api/drive?name=test@-*Folder');
+        expect(response.status).toBe(400);
+    });
+
+    it('should responds with status 201', async () => {
+        const response = await request(app).put('/api/drive?name=testFile.txt').send('Hello World');
+        expect(response.status).toBe(201);
+    });
+
+    // it('should responds with status 201', async () => {
+    //     const response = await request(app).post('/api/drive/testFolder?name=testFile.txt').send('Hello World');
+    //     expect(response.status).toBe(201);
+    // });
+
+    it('should responds with status 400', async () => {
+        const response = await request(app).post('/api/drive?name=testFolder');
+        expect(response.status).toBe(400);
+    });
+
+    // it('should responds with status 400', async () => {
+    //     const response = await request(app).post('/api/drive/testFolder?name=testFile.txt').send('Hello World');
+    //     expect(response.status).toBe(400);
+    // });
+
+    function cleanup() {
+        return () => {
+            fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
+            // fs.unlinkSync(path.join(__driveroot, 'testFile.txt'))
+        };
+    }
+
+    // cleanup
+    afterAll(cleanup());
 });
