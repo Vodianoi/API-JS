@@ -61,7 +61,7 @@ async function getFile(req: Request, res: Response) {
         res.status(404).json({message: `${fileName} Not found`})
         return;
     }
-    res.status(200).sendFile(fileName, {root: __driveRoot}, (err) => {
+    res.status(200).sendFile(folder, {root: __driveRoot}, (err) => {
         if (err) {
             res.status(500).json({message: err.message});
             return;

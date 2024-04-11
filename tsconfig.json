@@ -15,6 +15,7 @@
     "sourceMap": true
   },
   "files": [
+    "app.ts",
     "core.ts",
     "sys.ts",
     "types.ts",
