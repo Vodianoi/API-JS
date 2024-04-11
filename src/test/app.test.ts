@@ -1,0 +1,298 @@
+import request from 'supertest';
+import {app} from '../server';
+import fs from "fs";
+import * as path from "node:path";
+
+const __driveroot = "/tmp/drive"
+
+/**
+ * Retourne une liste contenant les dossiers et fichiers à la racine du “drive”
+ */
+describe('GET /api/drive', () => {
+
+    it('should responds with status 200', async () => {
+        const response = await request(app).get('/api/drive/');
+        expect(response.status).toBe(200);
+    });
+});
+
+/**
+ * Retourne le contenu de {name}
+ */
+describe('GET /api/drive/{name} ', () => {
+    /**
+     * Test adding a folder to the system and then fetching it
+     */
+    it('should responds with status 200', async () => {
+        const dirPath = path.join(__driveroot, 'testFolder');
+        if (!fs.existsSync(dirPath))
+            fs.mkdirSync(dirPath, {recursive: true})
+        const response = await request(app).get('/api/drive/testFolder');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([]);
+    });
+
+    /**
+     * Test adding a file to the system and then fetching it
+     */
+    it('should responds with status 200', async () => {
+        const filePath = path.join(__driveroot, 'testFile.txt');
+        fs.writeFileSync(filePath, 'Hello World')
+        const response = await request(app).get('/api/drive/testFile.txt');
+        expect(response.status).toBe(200);
+        expect(response.text).toEqual("Hello World");
+    });
+
+    /**
+     * Test adding folder + file inside it
+     */
+    it('should responds with status 200', async () => {
+        const dirPath = path.join(__driveroot, 'testFolder');
+        if (!fs.existsSync(dirPath))
+            fs.mkdirSync(dirPath, {recursive: true})
+        const filePath = path.join(dirPath, 'testFile.txt');
+        fs.writeFileSync(filePath, 'Hello World')
+        const response = await request(app).get('/api/drive/testFolder');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([{name: 'testFile.txt', isFolder: false, size: 11}]);
+    });
+
+    it('should responds with status 404', async () => {
+        const response = await request(app).get('/api/drive/unknown');
+        expect(response.status).toBe(404);
+    });
+
+    function cleanup() {
+        return () => {
+            fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
+            fs.rmSync(path.join(__driveroot, 'testFile.txt'))
+        };
+    }
+
+    // cleanup
+    afterAll(cleanup());
+
+});
+
+/**
+ * Créer un dossier avec le nom {name}
+ */
+describe('POST /api/drive?name={name}', () => {
+    it('should responds with status 201', async () => {
+        const response = await request(app).post('/api/drive?name=testFolder');
+        expect(response.status).toBe(201);
+    });
+
+    it('should responds with status 400', async () => {
+        const response = await request(app).post('/api/drive?name=test@-*Folder');
+        expect(response.status).toBe(400);
+    });
+
+
+    it('should responds with status 400', async () => {
+        const response = await request(app).post('/api/drive?name=testFolder');
+        expect(response.status).toBe(400);
+    });
+
+
+    function cleanup() {
+        return () => {
+            fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
+        };
+    }
+
+    // cleanup
+    afterAll(cleanup());
+});
+
+/**
+ * Créer un dossier avec le nom {name} dans {folder}
+ */
+describe('POST /api/drive/{folder}?name={name}', () => {
+    it('should responds with status 201', async () => {
+        await request(app).post('/api/drive?name=testFolder');
+        const response = await request(app).post('/api/drive/testFolder?name=testSubFolder');
+        expect(response.status).toBe(201);
+    });
+
+    it('should responds with status 400', async () => {
+        const response = await request(app).post('/api/drive/testFolder?name=test@-*SubFolder');
+        expect(response.status).toBe(400);
+    });
+
+    it('should responds with status 400', async () => {
+        const response = await request(app).post('/api/drive/testFolder?name=testSubFolder');
+        expect(response.status).toBe(400);
+    });
+
+    it('should responds with status 404', async () => {
+        const response = await request(app).post('/api/drive/unknown?name=testSubFolder');
+        expect(response.status).toBe(404);
+    });
+
+    function cleanup() {
+        return () => {
+            fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
+        };
+    }
+
+    // cleanup
+    afterAll(cleanup());
+})
+
+/**
+ * Suppression d’un dossier ou d’un fichier avec le nom {name}
+ */
+describe('DELETE /api/drive/{name}', () => {
+
+    it('should responds with status 201', async () => {
+        const fileName = 'testFile.txt';
+        const filePath = path.join(__driveroot, fileName);
+        fs.writeFileSync(filePath, 'Hello World')
+        const response = await request(app).delete(`/api/drive/${fileName}`);
+        expect(response.status).toBe(200);
+    });
+
+    it('should responds with status 400', async () => {
+        const fileName = 'testFile@.txt';
+        const filePath = path.join(__driveroot, fileName);
+        fs.writeFileSync(filePath, 'Hello World')
+        const response = await request(app).delete(`/api/drive/${fileName}`);
+        expect(response.status).toBe(400);
+    });
+
+    it('should responds with status 404', async () => {
+        const response = await request(app).delete(`/api/drive/`);
+        expect(response.status).toBe(404);
+    });
+
+    it('should responds with status 404', async () => {
+        const response = await request(app).delete(`/api/drive/unknown`);
+        expect(response.status).toBe(404);
+    });
+
+    function cleanup() {
+        return () => {
+            fs.rmSync(path.join(__driveroot, 'testFile@.txt'))
+        };
+    }
+
+    // cleanup
+    afterAll(cleanup());
+})
+
+/**
+ * Suppression d’un dossier ou d’un fichier avec le nom {name} dans {folder}
+ */
+describe('DELETE /api/drive/{folder}/{name}', () => {
+
+    it('should responds with status 201', async () => {
+        const folderName = 'testFolder';
+        const fileName = 'testFile.txt';
+        const folderPath = path.join(__driveroot, folderName);
+        const filePath = path.join(folderPath, fileName);
+        if (!fs.existsSync(folderPath))
+            fs.mkdirSync(folderPath, {recursive: true})
+        fs.writeFileSync(filePath, 'Hello World')
+        const response = await request(app).delete(`/api/drive/${folderName}/${fileName}`);
+        expect(response.status).toBe(200);
+    });
+
+    it('should responds with status 400', async () => {
+        const folderName = 'testFolder';
+        const fileName = 'testFile@.txt';
+        const folderPath = path.join(__driveroot, folderName);
+        const filePath = path.join(folderPath, fileName);
+        if (!fs.existsSync(folderPath))
+            fs.mkdirSync(folderPath, {recursive: true})
+        fs.writeFileSync(filePath, 'Hello World')
+        const response = await request(app).delete(`/api/drive/${folderName}/${fileName}`);
+        expect(response.status).toBe(400);
+    });
+
+    it('should responds with status 404', async () => {
+        const response = await request(app).delete(`/api/drive/unknown/unknown`);
+        expect(response.status).toBe(404);
+    });
+
+    function cleanup() {
+        return () => {
+            fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
+        };
+    }
+
+    // cleanup
+    afterAll(cleanup());
+});
+
+/**
+ * Créer un fichier à la racine du “drive”
+ */
+describe('PUT /api/drive', () => {
+
+    it('should responds with status 201', async function () {
+        const fileName = 'imageTest.webp';
+        let filePath = `../../resources/${fileName}`;
+        let fullPath = path.join(__dirname, filePath);
+
+        const response = await request(app)
+            .put('/api/drive')
+            // .set('Content-Type', 'multipart/form-data')
+            .attach('file', fullPath)
+
+        expect(response.status).toBe(201);
+    })
+
+    it('should responds with status 400', async function () {
+        const fileName = 'imageTest.webp';
+        let filePath = `../../resources/${fileName}`;
+        let fullPath = path.join(__dirname, filePath);
+
+        const response = await request(app)
+            .put('/api/drive')
+            // .set('Content-Type', 'multipart/form-data')
+            .attach('file', fullPath)
+
+        expect(response.status).toBe(400);
+    })
+
+    it('should responds with status 201', async function () {
+        const fileName = 'imageTest.webp';
+        let filePath = `../../resources/${fileName}`;
+        let fullPath = path.join(__dirname, filePath);
+
+        const folderName = 'testFolder';
+        await request(app).post(`/api/drive?name=${folderName}`);
+        const response = await request(app)
+            .put(`/api/drive/${folderName}`)
+            // .set('Content-Type', 'multipart/form-data')
+            .attach('file', fullPath)
+
+        expect(response.status).toBe(201);
+    })
+
+    it('should responds with status 400', async function () {
+        const fileName = 'imageTest.webp';
+        let filePath = `../../resources/${fileName}`;
+        let fullPath = path.join(__dirname, filePath);
+
+        const folderName = 'testFolder';
+        const response = await request(app)
+            .put(`/api/drive/${folderName}`)
+            // .set('Content-Type', 'multipart/form-data')
+            .attach('file', fullPath)
+
+        expect(response.status).toBe(400);
+    })
+
+    function cleanup() {
+        return () => {
+            fs.rmSync(path.join(__driveroot, 'imageTest.webp'), {recursive: true})
+            fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
+        };
+    }
+
+    // cleanup
+    afterAll(cleanup());
+
+})
