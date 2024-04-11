@@ -17,43 +17,48 @@ interface FileRequest extends Request {
 
 /* region GET */
 
-
-function fillJson(json: DriveItem[], folder: string) {
-    return (file: string) => {
-        const filePath = path.join(__driveRoot, folder, file);
-        const stats = fs.statSync(filePath);
-        json.push({
-            name: file,
-            isFolder: stats.isDirectory(),
-            size: stats.isDirectory() ? undefined : fs.statSync(filePath).size
-        });
-    };
-}
-
-function getFolder(req: Request, res: Response) {
+async function getFolder(req: Request, res: Response) {
     const folder = req.path.replace('/api/drive/', '');
 
     let folderPath = path.join(__driveRoot, folder);
-    if (!fs.existsSync(folderPath)) {
-        res.status(404).json({message: `${folderPath} not found`});
+
+    try {
+        await fs.promises.access(folderPath)
+    } catch (e) {
+        res.status(404).json({message: `${folderPath} not found`})
         return;
     }
-    if (!fs.statSync(folderPath).isDirectory()) {
+
+    const stat = await fs.promises.stat(folderPath);
+    if (!stat.isDirectory()) {
         return getFile(req, res);
     }
-    const drive = fs.readdirSync(folderPath);
+    const drive = await fs.promises.readdir(folderPath)
     const json: DriveItem[] = [];
-    drive.forEach(fillJson(json, folder));
+    for (const file of drive) {
+        const filePath = path.join(__driveRoot, folder, file);
+        const stats = await fs.promises.stat(filePath);
+        json.push({
+            name: file,
+            isFolder: stats.isDirectory(),
+            size: stats.isDirectory() ? undefined : stats.size
+        });
+    }
     res.status(200).json(json);
+
+
 }
 
-function getFile(req: Request, res: Response) {
+async function getFile(req: Request, res: Response) {
     const folder = req.path.replace('/api/drive', '');
     let paths = folder.split('/');
     const fileName = paths[paths.length - 1];
     const filePath = path.join(__driveRoot, folder);
-    if (!fs.existsSync(filePath)) {
-        res.status(404).json({message: `${fileName} Not found`});
+
+    try {
+        await fs.promises.access(filePath)
+    } catch (e) {
+        res.status(404).json({message: `${fileName} Not found`})
         return;
     }
     res.status(200).sendFile(fileName, {root: __driveRoot}, (err) => {
@@ -68,7 +73,7 @@ function getFile(req: Request, res: Response) {
 
 /* region POST */
 
-function postFolder(req: Request, res: Response) {
+async function postFolder(req: Request, res: Response) {
     const folder = req.query.name as string;
 
     const fullPath = req.path.replace('/api/drive', '');
@@ -82,20 +87,24 @@ function postFolder(req: Request, res: Response) {
     }
 
     // Check if parent folder already exists
-    if (!fs.existsSync(path.join(__driveRoot, fullPath))) {
+    try {
+        await fs.promises.access(path.join(__driveRoot, fullPath))
+    } catch (e) {
         res.status(404).json({message: "Parent folder not found"})
         return;
     }
 
-    if (!fs.existsSync(folderPath)) {
-        fs.promises.mkdir(folderPath).then(() => {
-            res.status(201).send();
-            return;
-        });
-    } else {
+    try {
+        await fs.promises.access(folderPath)
         res.status(400).json({message: "Folder already exists"})
         return;
+    } catch (e) {
+        await fs.promises.mkdir(folderPath)
+        res.status(201).send();
+        return;
     }
+
+
 }
 
 
@@ -103,7 +112,7 @@ function postFolder(req: Request, res: Response) {
 
 /* region PUT */
 
-function putFile(req: Request, res: Response) {
+async function putFile(req: Request, res: Response) {
     const folder = req.path.replace('/api/drive', '');
     const fileReq = req as FileRequest
     if (!fileReq.files) {
@@ -117,15 +126,19 @@ function putFile(req: Request, res: Response) {
     const fileName = file.filename;
     let filePath = path.join(__driveRoot, folder, fileName)
 
+    try{
+        await fs.promises.access(filePath)
 
-    if (fs.existsSync(filePath)) {
         res.status(400).json({message: "File already exists"})
-        fs.rmSync(path.join(file.file, '../../'), {recursive: true})
+        await fs.promises.rm(path.join(file.file, '../../'), {recursive: true})
         return
+    } catch (e) {
+        await fs.promises.copyFile(file.file, filePath);
+        await fs.promises.rm(path.join(file.file, '../../'), {recursive: true})
+        res.status(201).send();
+        return;
     }
-    fs.copyFileSync(file.file, filePath);
-    fs.rmSync(path.join(file.file, '../../'), {recursive: true})
-    res.status(201).send();
+
 }
 
 
@@ -133,7 +146,7 @@ function putFile(req: Request, res: Response) {
 
 /* region DELETE */
 
-function deleteFile(req: Request, res: Response) {
+async function deleteFile(req: Request, res: Response) {
     const folder = req.path.replace('/api/drive/', '');
     let paths = folder.split('/');
     const fileName = paths[paths.length - 1];
@@ -144,16 +157,20 @@ function deleteFile(req: Request, res: Response) {
         res.status(400).json({message: "File/Folder not provided"})
         return;
     }
-    if (!fs.existsSync(filePath)) {
+
+    try{
+        await fs.promises.access(filePath)
+    } catch (e) {
         res.status(404).json({message: `File/Folder ${fileName} not found`})
         return;
     }
 
-    fs.promises.stat(filePath).then((() => {
-        fs.promises.rm(filePath, {recursive: true}).then((() => {
-            res.status(200).send();
-        }));
-    }))
+
+    await fs.promises.stat(filePath)
+
+    await fs.promises.rm(filePath, {recursive: true})
+
+    res.status(200).send();
 
 }
 

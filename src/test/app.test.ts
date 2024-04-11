@@ -2,6 +2,7 @@ import request from 'supertest';
 import {app} from '../server';
 import fs from "fs";
 import * as path from "node:path";
+import {write} from "node:fs";
 
 const __driveroot = "/tmp/drive"
 
@@ -25,8 +26,11 @@ describe('GET /api/drive/{name} ', () => {
      */
     it('should responds with status 200', async () => {
         const dirPath = path.join(__driveroot, 'testFolder');
-        if (!fs.existsSync(dirPath))
-            fs.mkdirSync(dirPath, {recursive: true})
+        try {
+            await fs.promises.access(dirPath)
+        }catch (e) {
+            await fs.promises.mkdir(dirPath)
+        }
         const response = await request(app).get('/api/drive/testFolder');
         expect(response.status).toBe(200);
         expect(response.body).toEqual([]);
@@ -37,7 +41,7 @@ describe('GET /api/drive/{name} ', () => {
      */
     it('should responds with status 200', async () => {
         const filePath = path.join(__driveroot, 'testFile.txt');
-        fs.writeFileSync(filePath, 'Hello World')
+        await fs.promises.writeFile(filePath, 'Hello World')
         const response = await request(app).get('/api/drive/testFile.txt');
         expect(response.status).toBe(200);
         expect(response.text).toEqual("Hello World");
@@ -48,10 +52,14 @@ describe('GET /api/drive/{name} ', () => {
      */
     it('should responds with status 200', async () => {
         const dirPath = path.join(__driveroot, 'testFolder');
-        if (!fs.existsSync(dirPath))
-            fs.mkdirSync(dirPath, {recursive: true})
+        try {
+            await fs.promises.access(dirPath)
+        }catch (e) {
+            await fs.promises.mkdir(dirPath)
+        }
+
         const filePath = path.join(dirPath, 'testFile.txt');
-        fs.writeFileSync(filePath, 'Hello World')
+        await fs.promises.writeFile(filePath, 'Hello World')
         const response = await request(app).get('/api/drive/testFolder');
         expect(response.status).toBe(200);
         expect(response.body).toEqual([{name: 'testFile.txt', isFolder: false, size: 11}]);
@@ -63,9 +71,9 @@ describe('GET /api/drive/{name} ', () => {
     });
 
     function cleanup() {
-        return () => {
-            fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
-            fs.rmSync(path.join(__driveroot, 'testFile.txt'))
+        return async () => {
+            await fs.promises.rm(path.join(__driveroot, 'testFolder'), {recursive: true})
+            await fs.promises.rm(path.join(__driveroot, 'testFile.txt'))
         };
     }
 
@@ -96,8 +104,8 @@ describe('POST /api/drive?name={name}', () => {
 
 
     function cleanup() {
-        return () => {
-            fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
+        return async () => {
+            await fs.promises.rm(path.join(__driveroot, 'testFolder'), {recursive: true})
         };
     }
 
@@ -132,7 +140,7 @@ describe('POST /api/drive/{folder}?name={name}', () => {
 
     function cleanup() {
         return () => {
-            fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
+            fs.promises.rm(path.join(__driveroot, 'testFolder'), {recursive: true})
         };
     }
 
@@ -148,7 +156,7 @@ describe('DELETE /api/drive/{name}', () => {
     it('should responds with status 201', async () => {
         const fileName = 'testFile.txt';
         const filePath = path.join(__driveroot, fileName);
-        fs.writeFileSync(filePath, 'Hello World')
+        await fs.promises.writeFile(filePath, 'Hello World')
         const response = await request(app).delete(`/api/drive/${fileName}`);
         expect(response.status).toBe(200);
     });
@@ -156,7 +164,7 @@ describe('DELETE /api/drive/{name}', () => {
     it('should responds with status 400', async () => {
         const fileName = 'testFile@.txt';
         const filePath = path.join(__driveroot, fileName);
-        fs.writeFileSync(filePath, 'Hello World')
+        await fs.promises.writeFile(filePath, 'Hello World')
         const response = await request(app).delete(`/api/drive/${fileName}`);
         expect(response.status).toBe(400);
     });
@@ -172,8 +180,8 @@ describe('DELETE /api/drive/{name}', () => {
     });
 
     function cleanup() {
-        return () => {
-            fs.rmSync(path.join(__driveroot, 'testFile@.txt'))
+        return async () => {
+            await fs.promises.rm(path.join(__driveroot, 'testFile@.txt'))
         };
     }
 
@@ -191,9 +199,15 @@ describe('DELETE /api/drive/{folder}/{name}', () => {
         const fileName = 'testFile.txt';
         const folderPath = path.join(__driveroot, folderName);
         const filePath = path.join(folderPath, fileName);
-        if (!fs.existsSync(folderPath))
-            fs.mkdirSync(folderPath, {recursive: true})
-        fs.writeFileSync(filePath, 'Hello World')
+
+        try{
+            await fs.promises.access(folderPath)
+        }catch (e) {
+            await fs.promises.mkdir(folderPath)
+        }
+
+
+        await fs.promises.writeFile(filePath, 'Hello World')
         const response = await request(app).delete(`/api/drive/${folderName}/${fileName}`);
         expect(response.status).toBe(200);
     });
@@ -203,9 +217,13 @@ describe('DELETE /api/drive/{folder}/{name}', () => {
         const fileName = 'testFile@.txt';
         const folderPath = path.join(__driveroot, folderName);
         const filePath = path.join(folderPath, fileName);
-        if (!fs.existsSync(folderPath))
-            fs.mkdirSync(folderPath, {recursive: true})
-        fs.writeFileSync(filePath, 'Hello World')
+        try
+        {
+            await fs.promises.access(folderPath)
+        } catch (e) {
+            await fs.promises.mkdir(folderPath)
+        }
+        await fs.promises.writeFile(filePath, 'Hello World')
         const response = await request(app).delete(`/api/drive/${folderName}/${fileName}`);
         expect(response.status).toBe(400);
     });
@@ -216,8 +234,8 @@ describe('DELETE /api/drive/{folder}/{name}', () => {
     });
 
     function cleanup() {
-        return () => {
-            fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
+        return async () => {
+            await fs.promises.rm(path.join(__driveroot, 'testFolder'), {recursive: true})
         };
     }
 
@@ -286,9 +304,9 @@ describe('PUT /api/drive', () => {
     })
 
     function cleanup() {
-        return () => {
-            fs.rmSync(path.join(__driveroot, 'imageTest.webp'), {recursive: true})
-            fs.rmSync(path.join(__driveroot, 'testFolder'), {recursive: true})
+        return async () => {
+            await fs.promises.rm(path.join(__driveroot, 'imageTest.webp'), {recursive: true})
+            await fs.promises.rm(path.join(__driveroot, 'testFolder'), {recursive: true})
         };
     }
 
