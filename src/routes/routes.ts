@@ -14,6 +14,5 @@ export default (app: Express) => {
     app.put('/api/drive', putFile)
 
     app.delete('/api/drive/*/:name', deleteFile)
-    app.delete('/api/drive/*/:name', deleteFile)
     app.delete('/api/drive/:name', deleteFile)
 }
