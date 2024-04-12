@@ -133,6 +133,14 @@ async function putFile(req: Request, res: Response) {
         await fs.promises.rm(path.join(file.file, '../../'), {recursive: true})
         return
     } catch (e) {
+        const folderPath = path.join(__driveRoot, folder);
+        try{
+            await fs.promises.access(folderPath);
+        } catch(e)
+        {
+            res.status(404).json({message: `Folder ${folderPath} does not exists`});
+            return;
+        }
         await fs.promises.copyFile(file.file, filePath);
         await fs.promises.rm(path.join(file.file, '../../'), {recursive: true})
         res.status(201).send();

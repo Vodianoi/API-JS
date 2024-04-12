@@ -21,9 +21,7 @@ describe('GET /api/drive', () => {
  * Retourne le contenu de {name}
  */
 describe('GET /api/drive/{name} ', () => {
-    /**
-     * Test adding a folder to the system and then fetching it
-     */
+
     it('should responds with status 200', async () => {
         const dirPath = path.join(__driveroot, 'testFolder');
         try {
@@ -36,9 +34,6 @@ describe('GET /api/drive/{name} ', () => {
         expect(response.body).toEqual([]);
     });
 
-    /**
-     * Test adding a file to the system and then fetching it
-     */
     it('should responds with status 200', async () => {
         const filePath = path.join(__driveroot, 'testFile.txt');
         await fs.promises.writeFile(filePath, 'Hello World')
@@ -47,9 +42,6 @@ describe('GET /api/drive/{name} ', () => {
         expect(response.text).toEqual("Hello World");
     });
 
-    /**
-     * Test adding folder + file inside it
-     */
     it('should responds with status 200', async () => {
         const dirPath = path.join(__driveroot, 'testFolder');
         try {
@@ -274,6 +266,23 @@ describe('PUT /api/drive', () => {
         expect(response.status).toBe(400);
     })
 
+
+
+    function cleanup() {
+        return async () => {
+            await fs.promises.rm(path.join(__driveroot, 'imageTest.webp'), {recursive: true})
+        };
+    }
+
+    // cleanup
+    afterAll(cleanup());
+
+})
+
+/**
+ * Créer un fichier dans {folder}
+ */
+describe('PUT /api/drive/{folder}', () => {
     it('should responds with status 201', async function () {
         const fileName = 'imageTest.webp';
         let filePath = `../../resources/${fileName}`;
@@ -303,14 +312,26 @@ describe('PUT /api/drive', () => {
         expect(response.status).toBe(400);
     })
 
+    it('should responds with status 404', async function () {
+        const fileName = 'imageTest.webp';
+        let filePath = `../../resources/${fileName}`;
+        let fullPath = path.join(__dirname, filePath);
+
+        const folderName = 'unknown';
+        const response = await request(app)
+            .put(`/api/drive/${folderName}`)
+            // .set('Content-Type', 'multipart/form-data')
+            .attach('file', fullPath)
+
+        expect(response.status).toBe(404);
+    })
+
     function cleanup() {
         return async () => {
-            await fs.promises.rm(path.join(__driveroot, 'imageTest.webp'), {recursive: true})
             await fs.promises.rm(path.join(__driveroot, 'testFolder'), {recursive: true})
         };
     }
 
     // cleanup
     afterAll(cleanup());
-
 })
