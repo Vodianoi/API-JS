@@ -1,9 +1,9 @@
 import request from 'supertest';
 import {app} from '../server';
 import fs from "fs";
-import * as path from "node:path";
+import path from "path";
 
-const __driveroot = "/tmp/drive"
+const __driveRoot = "/tmp/drive"
 
 /**
  * Retourne une liste contenant les dossiers et fichiers à la racine du “drive”
@@ -17,12 +17,12 @@ describe('GET /api/drive', () => {
 });
 
 /**
- * Retourne le contenu de {name}
+ * Retourne le contenu de {name} or file content
  */
 describe('GET /api/drive/{name} ', () => {
 
     it('should responds with status 200', async () => {
-        const dirPath = path.join(__driveroot, 'testFolder');
+        const dirPath = path.join(__driveRoot, 'testFolder');
         try {
             await fs.promises.access(dirPath)
         }catch (e) {
@@ -34,7 +34,7 @@ describe('GET /api/drive/{name} ', () => {
     });
 
     it('should responds with status 200', async () => {
-        const filePath = path.join(__driveroot, 'testFile.txt');
+        const filePath = path.join(__driveRoot, 'testFile.txt');
         await fs.promises.writeFile(filePath, 'Hello World')
         const response = await request(app).get('/api/drive/testFile.txt');
         expect(response.status).toBe(200);
@@ -42,7 +42,7 @@ describe('GET /api/drive/{name} ', () => {
     });
 
     it('should responds with status 200', async () => {
-        const dirPath = path.join(__driveroot, 'testFolder');
+        const dirPath = path.join(__driveRoot, 'testFolder');
         try {
             await fs.promises.access(dirPath)
         }catch (e) {
@@ -63,8 +63,8 @@ describe('GET /api/drive/{name} ', () => {
 
     function cleanup() {
         return async () => {
-            await fs.promises.rm(path.join(__driveroot, 'testFolder'), {recursive: true})
-            await fs.promises.rm(path.join(__driveroot, 'testFile.txt'))
+            await fs.promises.rm(path.join(__driveRoot, 'testFolder'), {recursive: true})
+            await fs.promises.rm(path.join(__driveRoot, 'testFile.txt'))
         };
     }
 
@@ -96,7 +96,7 @@ describe('POST /api/drive?name={name}', () => {
 
     function cleanup() {
         return async () => {
-            await fs.promises.rm(path.join(__driveroot, 'testFolder'), {recursive: true})
+            await fs.promises.rm(path.join(__driveRoot, 'testFolder'), {recursive: true})
         };
     }
 
@@ -131,7 +131,7 @@ describe('POST /api/drive/{folder}?name={name}', () => {
 
     function cleanup() {
         return () => {
-            fs.promises.rm(path.join(__driveroot, 'testFolder'), {recursive: true})
+            fs.promises.rm(path.join(__driveRoot, 'testFolder'), {recursive: true})
         };
     }
 
@@ -146,7 +146,7 @@ describe('DELETE /api/drive/{name}', () => {
 
     it('should responds with status 201', async () => {
         const fileName = 'testFile.txt';
-        const filePath = path.join(__driveroot, fileName);
+        const filePath = path.join(__driveRoot, fileName);
         await fs.promises.writeFile(filePath, 'Hello World')
         const response = await request(app).delete(`/api/drive/${fileName}`);
         expect(response.status).toBe(200);
@@ -154,7 +154,7 @@ describe('DELETE /api/drive/{name}', () => {
 
     it('should responds with status 400', async () => {
         const fileName = 'testFile@.txt';
-        const filePath = path.join(__driveroot, fileName);
+        const filePath = path.join(__driveRoot, fileName);
         await fs.promises.writeFile(filePath, 'Hello World')
         const response = await request(app).delete(`/api/drive/${fileName}`);
         expect(response.status).toBe(400);
@@ -172,7 +172,7 @@ describe('DELETE /api/drive/{name}', () => {
 
     function cleanup() {
         return async () => {
-            await fs.promises.rm(path.join(__driveroot, 'testFile@.txt'))
+            await fs.promises.rm(path.join(__driveRoot, 'testFile@.txt'))
         };
     }
 
@@ -188,7 +188,7 @@ describe('DELETE /api/drive/{folder}/{name}', () => {
     it('should responds with status 201', async () => {
         const folderName = 'testFolder';
         const fileName = 'testFile.txt';
-        const folderPath = path.join(__driveroot, folderName);
+        const folderPath = path.join(__driveRoot, folderName);
         const filePath = path.join(folderPath, fileName);
 
         try{
@@ -206,7 +206,7 @@ describe('DELETE /api/drive/{folder}/{name}', () => {
     it('should responds with status 400', async () => {
         const folderName = 'testFolder';
         const fileName = 'testFile@.txt';
-        const folderPath = path.join(__driveroot, folderName);
+        const folderPath = path.join(__driveRoot, folderName);
         const filePath = path.join(folderPath, fileName);
         try
         {
@@ -226,7 +226,7 @@ describe('DELETE /api/drive/{folder}/{name}', () => {
 
     function cleanup() {
         return async () => {
-            await fs.promises.rm(path.join(__driveroot, 'testFolder'), {recursive: true})
+            await fs.promises.rm(path.join(__driveRoot, 'testFolder'), {recursive: true})
         };
     }
 
@@ -269,7 +269,7 @@ describe('PUT /api/drive', () => {
 
     function cleanup() {
         return async () => {
-            await fs.promises.rm(path.join(__driveroot, 'imageTest.webp'), {recursive: true})
+            await fs.promises.rm(path.join(__driveRoot, 'imageTest.webp'), {recursive: true})
         };
     }
 
@@ -327,7 +327,7 @@ describe('PUT /api/drive/{folder}', () => {
 
     function cleanup() {
         return async () => {
-            await fs.promises.rm(path.join(__driveroot, 'testFolder'), {recursive: true})
+            await fs.promises.rm(path.join(__driveRoot, 'testFolder'), {recursive: true})
         };
     }
 

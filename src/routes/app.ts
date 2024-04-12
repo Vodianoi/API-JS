@@ -11,10 +11,6 @@ interface DriveItem {
     size?: number;
 }
 
-// interface FileRequest extends Request {
-//     files: any;
-// }
-
 type FileRequest = Request & { files: any }
 
 /* region GET */
@@ -172,7 +168,7 @@ async function deleteFile(req: Request, res: Response) {
     try{
         await fs.promises.access(filePath)
     } catch (e) {
-        res.status(404).json({message: `File/Folder ${fileName} not found`})
+        res.status(404).json({message: `File/Folder ${fileName} not found`, error:e})
         return;
     }
 
