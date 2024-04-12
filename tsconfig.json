@@ -3,7 +3,7 @@
     "save-jest.config.js"
   ],
   "include": [
-    "src/**/*.ts"
+    "src/routes/app.ts"
   ],
   "ts-node": {
     "transpileOnly": true,

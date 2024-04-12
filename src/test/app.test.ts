@@ -2,7 +2,6 @@ import request from 'supertest';
 import {app} from '../server';
 import fs from "fs";
 import * as path from "node:path";
-import {write} from "node:fs";
 
 const __driveroot = "/tmp/drive"
 
