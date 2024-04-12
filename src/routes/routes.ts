@@ -8,7 +8,7 @@ router.get('/', getFolder)
 
 router.get('/*', getFolder)
 
-router.post('/*/', postFolder)
+router.post('/*', postFolder)
 router.post('/', postFolder)
 
 router.put('/*', putFile)

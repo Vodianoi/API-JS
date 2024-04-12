@@ -141,6 +141,7 @@ async function putFile(req: Request, res: Response) {
         } catch(e)
         {
             res.status(404).json({message: `Folder ${folderPath} does not exists`});
+            await fs.promises.rm(path.join(file.file, '../../'), {recursive: true})
             return;
         }
         await fs.promises.copyFile(file.file, filePath);
