@@ -11,9 +11,11 @@ interface DriveItem {
     size?: number;
 }
 
-interface FileRequest extends Request {
-    files: any;
-}
+// interface FileRequest extends Request {
+//     files: any;
+// }
+
+type FileRequest = Request & { files: any }
 
 /* region GET */
 
