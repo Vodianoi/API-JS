@@ -1,18 +1,20 @@
-import { Express } from "express";
-import { getFolder, postFolder, putFile, deleteFile } from "./app";
+import express from "express";
+import {getFolder, postFolder, putFile, deleteFile} from "./app";
 
-export default (app: Express) => {
+const router = express.Router();
 
-    app.get('/api/drive', getFolder)
 
-    app.get('/api/drive/*', getFolder)
+router.get('/', getFolder)
 
-    app.post('/api/drive/*/', postFolder)
-    app.post('/api/drive', postFolder)
+router.get('/*', getFolder)
 
-    app.put('/api/drive/*', putFile)
-    app.put('/api/drive', putFile)
+router.post('/*/', postFolder)
+router.post('/', postFolder)
 
-    app.delete('/api/drive/*/:name', deleteFile)
-    app.delete('/api/drive/:name', deleteFile)
-}
+router.put('/*', putFile)
+router.put('/', putFile)
+
+router.delete('/*/:name', deleteFile)
+router.delete('/:name', deleteFile)
+
+export default router;

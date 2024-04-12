@@ -19,7 +19,7 @@ app.use(function (req, res, next) {
     res.setHeader("Access-Control-Allow-Headers", "*");
     next();
 });
-routes(app)
+app.use('/api/drive', routes)
 
 const port = 3000;
 

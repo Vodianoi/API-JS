@@ -2,6 +2,9 @@
   "exclude": ["./coverage", "./dist", "__tests__",
     "save-jest.config.js"
   ],
+  "include": [
+    "src/**/*.ts"
+  ],
   "ts-node": {
     "transpileOnly": true,
     "files": true
