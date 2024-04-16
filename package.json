@@ -10,6 +10,8 @@
   "version": "1.0.0",
   "main": "src/main.ts",
   "scripts": {
+    "build": "tsc",
+    "start": "ts-node -T src/main.ts",
     "dev": "nodemon --exec node --inspect -r ts-node/register src/main.ts",
     "test": "jest",
     "test-watch": "jest --verbose --watchAll --coverage"
