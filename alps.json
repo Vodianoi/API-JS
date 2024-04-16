@@ -1,36 +1,39 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.0.0",
   "info": {
-    "title": "Alps Drive",
-    "description": "Drive for Alps",
-    "version": "1.0.0"
+    "title": "Drive API",
+    "version": "1.0.0",
+    "description": "API for managing files and folders"
   },
   "servers": [
     {
-      "url": "http://localhost:3000",
-      "description": "Local server",
-      "variables": {
-        "env": {
-          "default": "dev",
-          "description": "Environment"
-        }
-      }
+      "url": "http://localhost:3000"
     }
   ],
   "paths": {
     "/api/drive": {
       "get": {
-        "summary": "Get all files at root",
-        "description": "Get all files at root",
+        "summary": "Get contents of a folder",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search for files or folders by name",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Successful operation",
+            "description": "Folder contents retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/FileOrFolder"
+                    "$ref": "#/components/schemas/DriveItem"
                   }
                 }
               }
@@ -39,148 +42,71 @@
         }
       },
       "post": {
-        "summary": "Upload file at root",
-        "description": "Upload file at root",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
+        "summary": "Create a new folder",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Name of the folder to create",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
-          "200": {
-            "description": "Successful operation",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
+          "201": {
+            "description": "Folder created successfully"
+          },
+          "400": {
+            "description": "Bad request. Folder already exists or contains invalid characters"
+          },
+          "404": {
+            "description": "Parent folder not found"
           }
         }
       }
     },
     "/api/drive/{name}": {
-      "get": {
-        "summary": "Get files in a folder or file content",
-        "description": "Get files in a folder or file content",
+      "delete": {
+        "summary": "Delete a file or folder",
         "parameters": [
           {
-            "in": "path",
             "name": "name",
+            "in": "path",
+            "description": "Name of the file or folder to delete",
             "required": true,
             "schema": {
               "type": "string"
-            },
-            "description": "Name of the folder or file"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/FileOrFolder"
-                  }
-                }
-              }
-            }
+            "description": "File or folder deleted successfully"
+          },
+          "400": {
+            "description": "Bad request. File or folder not provided or contains invalid characters"
           },
           "404": {
-            "description": "Not Found"
+            "description": "File or folder not found"
           }
         }
       },
-      "post": {
-        "summary": "Create folder at root",
-        "description": "Create folder at root",
+      "put": {
+        "summary": "Upload a file",
         "parameters": [
           {
-            "in": "path",
             "name": "name",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Name of the folder"
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created"
-          },
-          "400": {
-            "description": "Bad Request"
-          }
-        }
-      }
-    },
-    "/api/drive/{folder}/{name}": {
-      "delete": {
-        "summary": "Delete folder or file",
-        "description": "Delete folder or file",
-        "parameters": [
-          {
             "in": "path",
-            "name": "folder",
+            "description": "Path where the file will be uploaded",
             "required": true,
             "schema": {
               "type": "string"
-            },
-            "description": "Name of the folder"
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Name of the file or folder"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/api/drive/{folder}": {
-      "post": {
-        "summary": "Upload file to a folder",
-        "description": "Upload file to a folder",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "folder",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Name of the folder"
+            }
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
@@ -197,13 +123,13 @@
         },
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "File uploaded successfully"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Bad request. No file uploaded or file already exists"
           },
           "404": {
-            "description": "Not Found"
+            "description": "Folder does not exist"
           }
         }
       }
@@ -211,17 +137,17 @@
   },
   "components": {
     "schemas": {
-      "FileOrFolder": {
+      "DriveItem": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string"
           },
-          "size": {
-            "type": "integer"
-          },
           "isFolder": {
             "type": "boolean"
+          },
+          "size": {
+            "type": "integer"
           }
         }
       }
