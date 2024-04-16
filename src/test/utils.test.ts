@@ -23,8 +23,8 @@ describe('throughDirectory function', () => {
     it('should return an array of files in the directory', () => {
         const testFiles = ['file1.txt', 'file2.txt'];
         const expectedFiles = [
-            {name: path.join(testFolderPath, 'file1.txt'), isFolder: false, size: 100},
-            {name: path.join(testFolderPath, 'file2.txt'), isFolder: false, size: 150},
+            {name: 'file1.txt', isFolder: false, size: 100},
+            {name: 'file2.txt', isFolder: false, size: 150},
         ];
 
         // Mocking fs.readdirSync to return testFiles
@@ -44,9 +44,9 @@ describe('throughDirectory function', () => {
         const testFiles = ['file1.txt', 'subFolder'];
         const testFiles2 = ['subFile.txt'];
         const expectedFiles = [
-            {name: path.join(testFolderPath, 'file1.txt'), isFolder: false, size: 100},
-            {name: path.join(testFolderPath, 'subFolder'), isFolder: true, size: undefined},
-            {name: path.join(testFolderPath, 'subFolder/subFile.txt'), isFolder: false, size: 100},
+            {name:  'file1.txt', isFolder: false, size: 100},
+            {name:  'subFolder', isFolder: true, size: undefined},
+            {name:  'subFile.txt', isFolder: false, size: 100},
         ];
 
         // Mocking fs.readdirSync to return testFiles
@@ -87,8 +87,8 @@ describe('throughDirectoryLike function', () => {
     it('should return an array of files in the directory', () => {
         const testFiles = ['file1.txt', 'file2.txt'];
         const expectedFiles = [
-            {name: path.join(testFolderPath, 'file1.txt'), isFolder: false, size: 100},
-            {name: path.join(testFolderPath, 'file2.txt'), isFolder: false, size: 150},
+            {name: 'file1.txt', isFolder: false, size: 100},
+            {name: 'file2.txt', isFolder: false, size: 150},
         ];
 
         // Mocking fs.readdirSync to return testFiles
@@ -108,9 +108,9 @@ describe('throughDirectoryLike function', () => {
         const testFiles = ['testFile1.txt', 'subTestFolder'];
         const testFiles2 = ['subTestFile.txt'];
         const expectedFiles = [
-            {name: path.join(testFolderPath, 'testFile1.txt'), isFolder: false, size: 100},
-            {name: path.join(testFolderPath, 'subTestFolder'), isFolder: true, size: undefined},
-            {name: path.join(testFolderPath, 'subTestFolder/subTestFile.txt'), isFolder: false, size: 100},
+            {name: 'testFile1.txt', isFolder: false, size: 100},
+            {name: 'subTestFolder', isFolder: true, size: undefined},
+            {name: 'subTestFile.txt', isFolder: false, size: 100},
         ];
 
         // Mocking fs.readdirSync to return testFiles

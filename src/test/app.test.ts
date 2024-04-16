@@ -25,7 +25,7 @@ describe('GET /api/drive/{name} ', () => {
         const dirPath = path.join(__driveRoot, 'testFolder');
         try {
             await fs.promises.access(dirPath)
-        }catch (e) {
+        } catch (e) {
             await fs.promises.mkdir(dirPath)
         }
         const response = await request(app).get('/api/drive/testFolder');
@@ -45,7 +45,7 @@ describe('GET /api/drive/{name} ', () => {
         const dirPath = path.join(__driveRoot, 'testFolder');
         try {
             await fs.promises.access(dirPath)
-        }catch (e) {
+        } catch (e) {
             await fs.promises.mkdir(dirPath)
         }
 
@@ -191,9 +191,9 @@ describe('DELETE /api/drive/{folder}/{name}', () => {
         const folderPath = path.join(__driveRoot, folderName);
         const filePath = path.join(folderPath, fileName);
 
-        try{
+        try {
             await fs.promises.access(folderPath)
-        }catch (e) {
+        } catch (e) {
             await fs.promises.mkdir(folderPath)
         }
 
@@ -208,8 +208,7 @@ describe('DELETE /api/drive/{folder}/{name}', () => {
         const fileName = 'testFile@.txt';
         const folderPath = path.join(__driveRoot, folderName);
         const filePath = path.join(folderPath, fileName);
-        try
-        {
+        try {
             await fs.promises.access(folderPath)
         } catch (e) {
             await fs.promises.mkdir(folderPath)
@@ -264,7 +263,6 @@ describe('PUT /api/drive', () => {
 
         expect(response.status).toBe(400);
     })
-
 
 
     function cleanup() {
@@ -346,9 +344,9 @@ describe('SEARCH /api/drive/?search=', () => {
         const folderPath = path.join(__driveRoot, folderName);
         const filePath = path.join(folderPath, fileName);
 
-        try{
+        try {
             await fs.promises.access(folderPath)
-        }catch (e) {
+        } catch (e) {
             await fs.promises.mkdir(folderPath)
         }
         await fs.promises.writeFile(filePath, 'Hello World')
@@ -357,10 +355,10 @@ describe('SEARCH /api/drive/?search=', () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual([
             {
-                name: path.join(__driveRoot, "testFolder"), isFolder: true, size: undefined
+                name: "testFolder", isFolder: true, size: undefined
             },
             {
-                name: path.join(__driveRoot, "testFolder", "testFile.txt"), isFolder: false, size: 11
+                name: "testFile.txt", isFolder: false, size: 11
             }
         ]);
 
