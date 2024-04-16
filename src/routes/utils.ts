@@ -10,21 +10,13 @@ export function throughDirectory(folder: string) {
     fs.readdirSync(folder).forEach(file => {
         const absolute = path.join(folder, file);
         const stats = fs.statSync(absolute);
+        files.push({
+            name: absolute,
+            isFolder: stats.isDirectory(),
+            size: stats.isDirectory() ? undefined : stats.size
+        });
         if (stats.isDirectory()) {
-            files.push({
-                name:absolute,
-                isFolder: true,
-                size: undefined
-            })
             files.push(...throughDirectory(absolute));
-        }
-        else {
-            files.push({
-                name: absolute,
-                isFolder: stats.isDirectory(),
-                size: stats.isDirectory() ? undefined : stats.size
-            });
-            return files;
         }
     });
     return files;
