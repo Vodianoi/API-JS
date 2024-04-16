@@ -22,7 +22,7 @@ async function getFolder(req: Request, res: Response) {
     //Search method
     if(req.query.search)
     {
-        const files = await search(req.query.search as string, folder)
+        const files = await search(req.query.search as string)
         res.status(200).send(files)
         return;
     }
@@ -76,7 +76,7 @@ async function getFile(req: Request, res: Response) {
     });
 }
 
-async function search(search: string, path: string){
+async function search(search: string){
     return throughDirectoryLike(new RegExp(search, "i"));
 }
 

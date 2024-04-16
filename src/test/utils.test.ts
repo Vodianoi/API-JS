@@ -1,8 +1,6 @@
-import mocked = jest.mocked;
 import path from "path";
 import fs from 'fs'
 import {throughDirectory} from "../routes/utils";
-import {Stats} from "node:fs";
 
 describe('ThroughDirectory function', () => {
     const testFolderPath = path.join(__dirname, 'testFolder');
