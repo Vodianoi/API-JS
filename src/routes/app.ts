@@ -57,7 +57,7 @@ async function getFolder(req: Request, res: Response) {
 }
 
 async function getFile(req: Request, res: Response) {
-    const folder = req.path.replace('/api/drive', '');
+    const folder = req.path.replace('/api/drive/', '');
     let paths = folder.split('/');
     const fileName = paths[paths.length - 1];
     const filePath = path.join(__driveRoot, folder);
@@ -89,7 +89,7 @@ async function search(search: string){
 async function postFolder(req: Request, res: Response) {
     const folder = req.query.name as string;
 
-    const fullPath = req.path.replace('/api/drive', '');
+    const fullPath = req.path.replace('/api/drive/', '');
     const folderPath = path.join(__driveRoot, fullPath, folder)
 
     // Check if folder name contains non-alphanumeric characters
