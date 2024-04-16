@@ -2,10 +2,11 @@ import {Request, Response} from "express";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import {throughDirectoryLike} from "./utils";
 
 const __driveRoot = path.join(os.tmpdir(), 'drive');
 
-interface DriveItem {
+export interface DriveItem {
     name: string;
     isFolder: boolean;
     size?: number;
@@ -17,6 +18,14 @@ type FileRequest = Request & { files: any }
 
 async function getFolder(req: Request, res: Response) {
     const folder = req.path.replace('/api/drive/', '');
+
+    //Search method
+    if(req.query.search)
+    {
+        const files = await search(req.query.search as string, folder)
+        res.status(200).send(files)
+        return;
+    }
 
     let folderPath = path.join(__driveRoot, folder);
 
@@ -66,6 +75,12 @@ async function getFile(req: Request, res: Response) {
         }
     });
 }
+
+async function search(search: string, path: string){
+    return throughDirectoryLike(new RegExp(search, "i"));
+}
+
+
 
 /* endregion GET */
 

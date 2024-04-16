@@ -334,3 +334,44 @@ describe('PUT /api/drive/{folder}', () => {
     // cleanup
     afterAll(cleanup());
 })
+
+/**
+ * Search feature
+ */
+describe('SEARCH /api/drive/?search=', () => {
+    it('should responds with status 200', async () => {
+        // add test files
+        const folderName = 'testFolder';
+        const fileName = 'testFile.txt';
+        const folderPath = path.join(__driveRoot, folderName);
+        const filePath = path.join(folderPath, fileName);
+
+        try{
+            await fs.promises.access(folderPath)
+        }catch (e) {
+            await fs.promises.mkdir(folderPath)
+        }
+        await fs.promises.writeFile(filePath, 'Hello World')
+
+        const response = await request(app).get('/api/drive/?search=test');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([
+            {
+                name: path.join(__driveRoot, "testFolder"), isFolder: true, size: undefined
+            },
+            {
+                name: path.join(__driveRoot, "testFolder", "testFile.txt"), isFolder: false, size: 11
+            }
+        ]);
+
+    })
+
+    function cleanup() {
+        return async () => {
+            await fs.promises.rm(path.join(__driveRoot, 'testFolder'), {recursive: true})
+        };
+    }
+
+    // cleanup
+    afterAll(cleanup());
+})
