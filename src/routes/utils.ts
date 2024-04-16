@@ -13,8 +13,8 @@ export function throughDirectory(folder: string) {
         if (stats.isDirectory()) {
             files.push({
                 name:absolute,
-                isFolder:stats.isDirectory(),
-                size:stats.size
+                isFolder: true,
+                size: undefined
             })
             files.push(...throughDirectory(absolute));
         }
@@ -36,21 +36,6 @@ export function throughDirectory(folder: string) {
  * @param folder
  */
 export function throughDirectoryLike(regex: RegExp, folder?: string) {
-    const files: DriveItem[] = []
-    fs.readdirSync(folder ?? __driveRoot).forEach(file => {
-
-        const absolute = path.join(folder ?? __driveRoot, file);
-        const stats = fs.statSync(absolute);
-        if (file.match(regex)) {
-            files.push({
-                name: path.join(folder ?? __driveRoot, file),
-                isFolder: stats.isDirectory(),
-                size: stats.isDirectory() ? undefined : stats.size
-            })
-        }
-        if (stats.isDirectory()) {
-            files.push(...throughDirectoryLike(regex, absolute));
-        }
-    });
-    return files;
+    const files: DriveItem[] = throughDirectory(folder || __driveRoot);
+    return files.filter(file => regex.test(file.name));
 }

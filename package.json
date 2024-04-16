@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "nodemon --exec node --inspect -r ts-node/register src/main.ts",
     "test": "jest",
-    "test-watch": "jest --verbose --watchAll"
+    "test-watch": "jest --verbose --watchAll --coverage"
   },
   "repository": {
     "type": "git",
