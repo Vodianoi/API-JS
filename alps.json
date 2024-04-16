@@ -8,40 +8,20 @@
   "servers": [
     {
       "url": "http://localhost:3000",
-        "description": "Local server",
-        "variables": {
-          "env": {
-            "default": "dev",
-            "description": "Environment"
-          }
+      "description": "Local server",
+      "variables": {
+        "env": {
+          "default": "dev",
+          "description": "Environment"
         }
+      }
     }
   ],
   "paths": {
-    "/": {
-        "get": {
-            "summary": "Get all files",
-            "description": "Get all files",
-            "responses": {
-            "200": {
-                "description": "Successful operation",
-                "content": {
-                "application/json": {
-                    "schema": {
-                    "type": "array",
-                    "items": {
-                    }
-                    }
-                }
-                }
-            }
-            }
-        }
-    },
     "/api/drive": {
       "get": {
-        "summary": "Get all files",
-        "description": "Get all files",
+        "summary": "Get all files at root",
+        "description": "Get all files at root",
         "responses": {
           "200": {
             "description": "Successful operation",
@@ -50,6 +30,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
+                    "$ref": "#/components/schemas/FileOrFolder"
                   }
                 }
               }
@@ -58,9 +39,10 @@
         }
       },
       "post": {
-        "summary": "Upload file",
-        "description": "Upload file",
+        "summary": "Upload file at root",
+        "description": "Upload file at root",
         "requestBody": {
+          "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
@@ -80,14 +62,169 @@
             "description": "Successful operation",
             "content": {
               "application/json": {
-                "schema": {
-                }
+                "schema": {}
               }
             }
           }
         }
       }
+    },
+    "/api/drive/{name}": {
+      "get": {
+        "summary": "Get files in a folder or file content",
+        "description": "Get files in a folder or file content",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the folder or file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FileOrFolder"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create folder at root",
+        "description": "Create folder at root",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the folder"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/drive/{folder}/{name}": {
+      "delete": {
+        "summary": "Delete folder or file",
+        "description": "Delete folder or file",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "folder",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the folder"
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the file or folder"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/drive/{folder}": {
+      "post": {
+        "summary": "Upload file to a folder",
+        "description": "Upload file to a folder",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "folder",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the folder"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
-
+  },
+  "components": {
+    "schemas": {
+      "FileOrFolder": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "isFolder": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
   }
 }
