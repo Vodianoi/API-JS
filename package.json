@@ -2,9 +2,7 @@
   "dependencies": {
     "express": "^4.19.2",
     "express-busboy": "^10.1.0",
-    "express-list-routes": "^1.2.1",
-    "fs": "^0.0.1-security",
-    "os": "^0.1.2"
+    "express-list-routes": "^1.2.1"
   },
   "name": "alps-drive",
   "version": "1.0.0",
