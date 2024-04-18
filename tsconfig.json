@@ -1,5 +1,8 @@
 {
-  "exclude": ["./coverage", "./dist", "__tests__",
+  "exclude": [
+    "./coverage",
+    "./dist",
+    "__tests__",
     "save-jest.config.js"
   ],
   "include": [
@@ -18,18 +21,8 @@
     "sourceMap": true
   },
   "files": [
-    "core.ts",
-    "sys.ts",
-    "types.ts",
-    "scanner.ts",
-    "parser.ts",
-    "utilities.ts",
-    "binder.ts",
-    "checker.ts",
-    "emitter.ts",
-    "program.ts",
-    "commandLineParser.ts",
-    "tsc.ts",
-    "diagnosticInformationMap.generated.ts"
+    "src/routes/app.ts",
+    "src/test/app.test.ts",
+    "src/test/utils.test.ts"
   ]
 }
