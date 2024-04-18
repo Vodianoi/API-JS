@@ -162,7 +162,7 @@ describe('DELETE /api/drive/{name}', () => {
 
     it('should responds with status 404', async () => {
         const response = await request(app).delete(`/api/drive/`);
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(400);
     });
 
     it('should responds with status 404', async () => {

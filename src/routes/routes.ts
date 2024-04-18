@@ -9,6 +9,6 @@ router.post('/?*', postFolder)
 
 router.put('/?*', putFile)
 
-router.delete('/?*/:name', deleteFile)
+router.delete('/?*', deleteFile)
 
 export default router;

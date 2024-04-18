@@ -86,7 +86,6 @@ describe('throughDirectoryLike function', () => {
         ];
 
         // Mocking fs.readdir to return testFiles
-
         readdir.mockResolvedValue(testFiles);
 
         // Mocking fs.stat to return appropriate stats for each file

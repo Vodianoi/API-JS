@@ -20,8 +20,7 @@ async function getFolder(req: Request, res: Response) {
     const folder = req.path.replace('/api/drive/', '');
 
     //Search method
-    if(req.query.search)
-    {
+    if (req.query.search) {
         const files = await search(req.query.search as string)
         res.status(200).send(files)
         return;
@@ -76,10 +75,9 @@ async function getFile(req: Request, res: Response) {
     });
 }
 
-async function search(search: string){
+async function search(search: string) {
     return throughDirectoryLike(new RegExp(search, "i"));
 }
-
 
 
 /* endregion GET */
@@ -139,7 +137,7 @@ async function putFile(req: Request, res: Response) {
     const fileName = file.filename;
     let filePath = path.join(__driveRoot, folder, fileName)
 
-    try{
+    try {
         await fs.promises.access(filePath)
 
         res.status(400).json({message: "File already exists"})
@@ -147,10 +145,9 @@ async function putFile(req: Request, res: Response) {
         return
     } catch (e) {
         const folderPath = path.join(__driveRoot, folder);
-        try{
+        try {
             await fs.promises.access(folderPath);
-        } catch(e)
-        {
+        } catch (e) {
             res.status(404).json({message: `Folder ${folderPath} does not exists`});
             await fs.promises.rm(path.join(file.file, '../../'), {recursive: true})
             return;
@@ -175,15 +172,15 @@ async function deleteFile(req: Request, res: Response) {
     let filePath = path.join(__driveRoot, folder)
 
     const re = new RegExp(/^[a-z0-9._-]+$/i);
-    if (!fileName.match(re) && fileName.length !== 0) {
+    if ((!fileName.match(re) && fileName.length !== 0) || fileName === '') {
         res.status(400).json({message: "File/Folder not provided"})
         return;
     }
 
-    try{
+    try {
         await fs.promises.access(filePath)
     } catch (e) {
-        res.status(404).json({message: `File/Folder ${fileName} not found`, error:e})
+        res.status(404).json({message: `File/Folder ${fileName} not found`, error: e})
         return;
     }
 
