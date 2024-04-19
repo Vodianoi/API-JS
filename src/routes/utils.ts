@@ -25,7 +25,6 @@ export async function throughDirectory(folder: string) {
         if (stats.isDirectory()) {
             files.push(...await throughDirectory(absolute));
         }
-
     }
     return files;
 }
@@ -78,7 +77,7 @@ async function checkAlreadyExists(path: string) {
     } catch (e) {
         return false;
     }
-    throw new DriveError(400, "Folder already exists")
+    throw new DriveError(400, `Folder/File ${path} already exists`)
 
 }
 
@@ -101,10 +100,10 @@ export async function createDir(fullPath: string, folderPath: string) {
     }
 }
 
-export async function moveUploadedFile(filePath: string, folderPath: string, file: any) {
+export async function moveUploadedFile(folderPath: string, file: any) {
+    const filePath = path.join(folderPath, file.filename);
     if (!await checkAlreadyExists(filePath) && await access(folderPath)) {
         await fs.promises.mkdir(folderPath, {recursive: true});
-        await fs.promises.copyFile(file.file, filePath);
-        await fs.promises.rm(path.join(file.file, '../../'), {recursive: true})
+        await fs.promises.rename(file.file, filePath)
     }
 }

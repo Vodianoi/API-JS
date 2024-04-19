@@ -264,6 +264,17 @@ describe('PUT /api/drive', () => {
         expect(response.status).toBe(400);
     })
 
+    it('should responds with status 400', async function () {
+        const fileName = 'imageTest.webp';
+        let filePath = `../../resources/${fileName}`;
+        let fullPath = path.join(__dirname, filePath);
+
+        const response = await request(app)
+            .put('/api/drive')
+
+        expect(response.status).toBe(400);
+    });
+
 
     function cleanup() {
         return async () => {

@@ -76,7 +76,7 @@ async function handlePut(req: Request, res: Response, next: NextFunction) {
     try {
         const folder = req.path.replace('/api/drive', '');
         const fileReq = req as FileRequest
-        if (!fileReq.files) {
+        if (!fileReq.files.file) {
             throw new DriveError(400, "No file uploaded")
         }
         const file = fileReq.files.file
@@ -85,11 +85,11 @@ async function handlePut(req: Request, res: Response, next: NextFunction) {
         let filePath = path.join(__driveRoot, folder, fileName)
 
         const folderPath = path.join(__driveRoot, folder);
-        await moveUploadedFile(filePath, folderPath, file);
+        await moveUploadedFile(folderPath, file);
         res.status(201).send();
 
     } catch (e) {
-        if ((req as FileRequest).files) {
+        if ((req as FileRequest).files.file) {
             await fs.promises.rm(path.join((req as FileRequest).files.file.file, '../../'), {recursive: true})
         }
         next(e)
