@@ -1,11 +1,8 @@
 version: '2'
 services:
   api:
-    build: .
-    command: npm run dev
-    volumes:
-      - .:/usr/app/
-      - /usr/app/node_modules
+    image: atopy/api-drive
+    command: npm run start
     ports:
       - "3000:3000"
   front:
