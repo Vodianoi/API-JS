@@ -7,6 +7,10 @@ import DriveError from "../errors/DriveError";
 
 const __driveRoot = path.join(os.tmpdir(), 'drive');
 
+if (!fs.existsSync(__driveRoot)) {
+    fs.mkdirSync(__driveRoot)
+}
+
 export interface DriveItem {
     name: string;
     isFolder: boolean;
