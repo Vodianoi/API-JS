@@ -1,7 +1,8 @@
 import {Request, Response, NextFunction} from "express";
+import DriveError from "../errors/DriveError";
 
-const ErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-    const errStatus = err.statusCode || 500;
+const ErrorHandler = (err: DriveError, req: Request, res: Response, next: NextFunction) => {
+    const errStatus = err.code || 500;
     const errMsg = err.message || 'Something went wrong';
     res.status(errStatus).json({
         success: false,

@@ -1,8 +1,9 @@
-import {Request, Response} from "express";
+import {NextFunction, Request, Response} from "express";
 import fs from "fs";
 import os from "os";
 import path from "path";
 import {throughDirectoryLike} from "./utils";
+import DriveError from "../errors/DriveError";
 
 const __driveRoot = path.join(os.tmpdir(), 'drive');
 
@@ -16,29 +17,7 @@ type FileRequest = Request & { files: any }
 
 /* region GET */
 
-async function getFolder(req: Request, res: Response) {
-    const folder = req.path.replace('/api/drive/', '');
-
-    //Search method
-    if (req.query.search) {
-        const files = await search(req.query.search as string)
-        res.status(200).send(files)
-        return;
-    }
-
-    let folderPath = path.join(__driveRoot, folder);
-
-    try {
-        await fs.promises.access(folderPath)
-    } catch (e) {
-        res.status(404).json({message: `${folderPath} not found`})
-        return;
-    }
-
-    const stat = await fs.promises.stat(folderPath);
-    if (!stat.isDirectory()) {
-        return getFile(req, res);
-    }
+async function getFolder(folderPath: string, folder: string) {
     const drive = await fs.promises.readdir(folderPath)
     const json: DriveItem[] = [];
     for (const file of drive) {
@@ -50,30 +29,62 @@ async function getFolder(req: Request, res: Response) {
             size: stats.isDirectory() ? undefined : stats.size
         });
     }
-    res.status(200).json(json);
-
-
+    return json;
 }
 
-async function getFile(req: Request, res: Response) {
-    const folder = req.path.replace('/api/drive/', '');
-    let paths = folder.split('/');
-    const fileName = paths[paths.length - 1];
-    const filePath = path.join(__driveRoot, folder);
-
+async function getStats(folderPath: string) {
     try {
-        await fs.promises.access(filePath)
+        return await fs.promises.stat(folderPath);
     } catch (e) {
-        res.status(404).json({message: `${fileName} Not found`})
-        return;
+        throw new DriveError(404, `${folderPath} not found`)
     }
-    res.status(200).sendFile(folder, {root: __driveRoot}, (err) => {
-        if (err) {
-            res.status(500).json({message: err.message});
+}
+
+async function handleGet(req: Request, res: Response, next: NextFunction) {
+    try {
+        const folder = req.path.replace('/api/drive/', '');
+
+        //Search method
+        if (req.query.search) {
+            const files = await search(req.query.search as string)
+            res.status(200).send(files)
             return;
         }
-    });
+
+        let folderPath = path.join(__driveRoot, folder);
+        const stat = await getStats(folderPath);
+        if (await access(folderPath)) {
+            if (!stat.isDirectory()) {
+                res.status(200).sendFile(folder, {root: __driveRoot});
+            } else {
+                const json = await getFolder(folderPath, folder);
+                res.status(200).json(json);
+            }
+        }
+    } catch (e) {
+        next(e);
+    }
 }
+
+async function access(path: string) {
+    try {
+        await fs.promises.access(path)
+        return true;
+    } catch (e) {
+        throw new DriveError(404, `${path} not found`)
+    }
+}
+
+async function checkAlreadyExists(path: string) {
+    try {
+        await fs.promises.access(path)
+    } catch (e) {
+        return false;
+    }
+    throw new DriveError(400, "Folder already exists")
+
+}
+
 
 async function search(search: string) {
     return throughDirectoryLike(new RegExp(search, "i"));
@@ -84,38 +95,38 @@ async function search(search: string) {
 
 /* region POST */
 
-async function postFolder(req: Request, res: Response) {
-    const folder = req.query.name as string;
-
-    const fullPath = req.path.replace('/api/drive/', '');
-    const folderPath = path.join(__driveRoot, fullPath, folder)
-
-    // Check if folder name contains non-alphanumeric characters
+function isAlphaNumerical(folder: string) {
     const re = new RegExp(/^[a-z0-9._-]+$/i);
     if (!folder.match(re) && folder.length !== 0) {
-        res.status(400).json({message: "Non-alphanumeric characters not allowed"})
-        return;
+        throw new DriveError(400, "Non-alphanumeric characters not allowed")
     }
+    return true;
+}
 
-    // Check if parent folder already exists
-    try {
-        await fs.promises.access(path.join(__driveRoot, fullPath))
-    } catch (e) {
-        res.status(404).json({message: "Parent folder not found"})
-        return;
-    }
-
-    try {
-        await fs.promises.access(folderPath)
-        res.status(400).json({message: "Folder already exists"})
-        return;
-    } catch (e) {
+async function createDir(fullPath: string, folderPath: string) {
+    if (await access(path.join(__driveRoot, fullPath))
+        && !await checkAlreadyExists(folderPath)) {
         await fs.promises.mkdir(folderPath)
-        res.status(201).send();
-        return;
     }
+}
 
+async function handlePost(req: Request, res: Response, next: NextFunction) {
+    try {
+        const folder = req.query.name as string;
 
+        const fullPath = req.path.replace('/api/drive/', '');
+        const folderPath = path.join(__driveRoot, fullPath, folder)
+
+        // Check if folder name contains non-alphanumeric characters
+        if (isAlphaNumerical(folder)) {
+            // Check if parent folder already exists
+            await createDir(fullPath, folderPath);
+        }
+
+        res.status(201).send();
+    } catch (e) {
+        next(e)
+    }
 }
 
 
@@ -123,76 +134,63 @@ async function postFolder(req: Request, res: Response) {
 
 /* region PUT */
 
-async function putFile(req: Request, res: Response) {
-    const folder = req.path.replace('/api/drive', '');
-    const fileReq = req as FileRequest
-    if (!fileReq.files) {
-        res.status(400).json({message: "No file uploaded"})
-        return;
-    }
-
-
-    const file = fileReq.files.file
-
-    const fileName = file.filename;
-    let filePath = path.join(__driveRoot, folder, fileName)
-
-    try {
-        await fs.promises.access(filePath)
-
-        res.status(400).json({message: "File already exists"})
-        await fs.promises.rm(path.join(file.file, '../../'), {recursive: true})
-        return
-    } catch (e) {
-        const folderPath = path.join(__driveRoot, folder);
-        try {
-            await fs.promises.access(folderPath);
-        } catch (e) {
-            res.status(404).json({message: `Folder ${folderPath} does not exists`});
-            await fs.promises.rm(path.join(file.file, '../../'), {recursive: true})
-            return;
-        }
+async function moveUploadedFile(filePath: string, folderPath: string, file: any) {
+    if (!await checkAlreadyExists(filePath) && await access(folderPath)) {
+        await fs.promises.mkdir(folderPath, {recursive: true});
         await fs.promises.copyFile(file.file, filePath);
         await fs.promises.rm(path.join(file.file, '../../'), {recursive: true})
-        res.status(201).send();
-        return;
     }
-
 }
 
+async function handlePut(req: Request, res: Response, next: NextFunction) {
+    try {
+        const folder = req.path.replace('/api/drive', '');
+        const fileReq = req as FileRequest
+        if (!fileReq.files) {
+            throw new DriveError(400, "No file uploaded")
+        }
+        const file = fileReq.files.file
+
+        const fileName = file.filename;
+        let filePath = path.join(__driveRoot, folder, fileName)
+
+        const folderPath = path.join(__driveRoot, folder);
+        await moveUploadedFile(filePath, folderPath, file);
+        res.status(201).send();
+
+    } catch (e) {
+        if ((req as FileRequest).files) {
+            await fs.promises.rm(path.join((req as FileRequest).files.file.file, '../../'), {recursive: true})
+        }
+        next(e)
+    }
+}
 
 /* endregion PUT */
 
 /* region DELETE */
 
-async function deleteFile(req: Request, res: Response) {
-    const folder = req.path.replace('/api/drive/', '');
-    let paths = folder.split('/');
-    const fileName = paths[paths.length - 1];
-    let filePath = path.join(__driveRoot, folder)
-
-    const re = new RegExp(/^[a-z0-9._-]+$/i);
-    if ((!fileName.match(re) && fileName.length !== 0) || fileName === '') {
-        res.status(400).json({message: "File/Folder not provided"})
-        return;
-    }
-
+async function handleDelete(req: Request, res: Response, next: NextFunction) {
     try {
-        await fs.promises.access(filePath)
+        const folder = req.path.replace('/api/drive/', '');
+        let paths = folder.split('/');
+        const fileName = paths[paths.length - 1];
+        let filePath = path.join(__driveRoot, folder)
+
+        if (fileName === '') {
+            throw new DriveError(400, "File/Folder not provided")
+        }
+
+        if (isAlphaNumerical(fileName) && await access(filePath)) {
+            await fs.promises.rm(filePath, {recursive: true})
+        }
+        res.status(200).send();
     } catch (e) {
-        res.status(404).json({message: `File/Folder ${fileName} not found`, error: e})
-        return;
+        next(e)
     }
-
-
-    await fs.promises.stat(filePath)
-
-    await fs.promises.rm(filePath, {recursive: true})
-
-    res.status(200).send();
 
 }
 
 /* endregion DELETE */
 
-export {getFolder, postFolder, putFile, deleteFile};
+export {handleGet, handlePost, handlePut, handleDelete};

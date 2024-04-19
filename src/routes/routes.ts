@@ -1,14 +1,14 @@
 import express from "express";
-import {getFolder, postFolder, putFile, deleteFile} from "./app";
+import {handleGet, handlePost, handlePut, handleDelete} from "./app";
 
 const router = express.Router();
 
-router.get('/?*', getFolder)
+router.get('/?*', handleGet)
 
-router.post('/?*', postFolder)
+router.post('/?*', handlePost)
 
-router.put('/?*', putFile)
+router.put('/?*', handlePut)
 
-router.delete('/?*', deleteFile)
+router.delete('/?*', handleDelete)
 
 export default router;
