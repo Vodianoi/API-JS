@@ -2,7 +2,7 @@ import {NextFunction, Request, Response} from "express";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import {throughDirectoryLike} from "./utils";
+import {access, createDir, getFolder, getStats, isAlphaNumerical, moveUploadedFile, search} from "./utils";
 import DriveError from "../errors/DriveError";
 
 const __driveRoot = path.join(os.tmpdir(), 'drive');
@@ -16,29 +16,6 @@ export interface DriveItem {
 type FileRequest = Request & { files: any }
 
 /* region GET */
-
-async function getFolder(folderPath: string, folder: string) {
-    const drive = await fs.promises.readdir(folderPath)
-    const json: DriveItem[] = [];
-    for (const file of drive) {
-        const filePath = path.join(__driveRoot, folder, file);
-        const stats = await fs.promises.stat(filePath);
-        json.push({
-            name: file,
-            isFolder: stats.isDirectory(),
-            size: stats.isDirectory() ? undefined : stats.size
-        });
-    }
-    return json;
-}
-
-async function getStats(folderPath: string) {
-    try {
-        return await fs.promises.stat(folderPath);
-    } catch (e) {
-        throw new DriveError(404, `${folderPath} not found`)
-    }
-}
 
 async function handleGet(req: Request, res: Response, next: NextFunction) {
     try {
@@ -66,49 +43,10 @@ async function handleGet(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-async function access(path: string) {
-    try {
-        await fs.promises.access(path)
-        return true;
-    } catch (e) {
-        throw new DriveError(404, `${path} not found`)
-    }
-}
-
-async function checkAlreadyExists(path: string) {
-    try {
-        await fs.promises.access(path)
-    } catch (e) {
-        return false;
-    }
-    throw new DriveError(400, "Folder already exists")
-
-}
-
-
-async function search(search: string) {
-    return throughDirectoryLike(new RegExp(search, "i"));
-}
-
 
 /* endregion GET */
 
 /* region POST */
-
-function isAlphaNumerical(folder: string) {
-    const re = new RegExp(/^[a-z0-9._-]+$/i);
-    if (!folder.match(re) && folder.length !== 0) {
-        throw new DriveError(400, "Non-alphanumeric characters not allowed")
-    }
-    return true;
-}
-
-async function createDir(fullPath: string, folderPath: string) {
-    if (await access(path.join(__driveRoot, fullPath))
-        && !await checkAlreadyExists(folderPath)) {
-        await fs.promises.mkdir(folderPath)
-    }
-}
 
 async function handlePost(req: Request, res: Response, next: NextFunction) {
     try {
@@ -133,14 +71,6 @@ async function handlePost(req: Request, res: Response, next: NextFunction) {
 /* endregion POST */
 
 /* region PUT */
-
-async function moveUploadedFile(filePath: string, folderPath: string, file: any) {
-    if (!await checkAlreadyExists(filePath) && await access(folderPath)) {
-        await fs.promises.mkdir(folderPath, {recursive: true});
-        await fs.promises.copyFile(file.file, filePath);
-        await fs.promises.rm(path.join(file.file, '../../'), {recursive: true})
-    }
-}
 
 async function handlePut(req: Request, res: Response, next: NextFunction) {
     try {
