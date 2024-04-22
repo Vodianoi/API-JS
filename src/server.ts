@@ -8,8 +8,7 @@ const app = express();
 
 bb.extend(app, {
     upload: true,
-    path: '/tmp/drive',
-    allowedPath: /./
+    allowedPath: /^\/api\/drive.*/
 });
 
 app.use(function (req, res, next) {
