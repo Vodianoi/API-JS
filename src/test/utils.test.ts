@@ -272,7 +272,6 @@ describe('search function', () => {
             .mockResolvedValueOnce({isDirectory: () => false, size: 100})
 
         const result = await search('file');
-        console.log(result);
         expect(result).toEqual(expectedFiles);
     });
 })
